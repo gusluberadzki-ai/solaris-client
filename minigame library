@@ -1,0 +1,541 @@
+import random
+import subprocess
+import sys
+from pathlib import Path
+
+import tkinter as tk
+from tkinter import PhotoImage
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+
+
+def asset_path(name: str) -> str:
+    return str(SCRIPT_DIR / name)
+
+
+BACKGROUND_IMG = asset_path("ArcadeBG.gif")
+BOUNCE_SOUND = asset_path("bounce.wav")
+SNAKE_SCRIPT = asset_path("snake game coding experiments.py")
+
+
+def play_sound(path: str) -> None:
+    """Play a sound in a platform-friendly way."""
+    if not Path(path).is_file():
+        return
+    try:
+        if sys.platform == "win32":
+            import winsound  # type: ignore
+
+            winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["afplay", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            subprocess.Popen(["aplay", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+
+# Game code
+
+def launch_pong():
+    import turtle
+
+    wn = turtle.Screen()
+    wn.title("Pong by Gustaw")
+    wn.bgcolor("black")
+    wn.setup(width=800, height=600)
+    wn.tracer(0)
+
+    score_a = 0
+    score_b = 0
+    switch = -1
+
+    paddle_a = turtle.Turtle()
+    paddle_a.speed(20)
+    paddle_a.shape("square")
+    paddle_a.color("white")
+    paddle_a.shapesize(stretch_wid=5, stretch_len=1)
+    paddle_a.penup()
+    paddle_a.goto(-350, 0)
+
+    paddle_b = turtle.Turtle()
+    paddle_b.speed(20)
+    paddle_b.shape("square")
+    paddle_b.color("white")
+    paddle_b.shapesize(stretch_wid=5, stretch_len=1)
+    paddle_b.penup()
+    paddle_b.goto(350, 0)
+
+    ball = turtle.Turtle()
+    ball.speed(0)
+    ball.shape("square")
+    ball.color("red")
+    ball.penup()
+    ball.goto(0, 0)
+    ball.dx = 2
+    ball.dy = 2
+
+    pen = turtle.Turtle()
+    pen.speed(0)
+    pen.color("white")
+    pen.penup()
+    pen.hideturtle()
+    pen.goto(0, 260)
+    pen.write("Player A: 0 Player B: 0", align="center", font=("Courier", 24, "normal"))
+
+    def paddle_a_up():
+        y = paddle_a.ycor()
+        paddle_a.sety(y + 20)
+
+    def paddle_a_down():
+        y = paddle_a.ycor()
+        paddle_a.sety(y - 20)
+
+    def paddle_b_up():
+        y = paddle_b.ycor()
+        paddle_b.sety(y + 20)
+
+    def paddle_b_down():
+        y = paddle_b.ycor()
+        paddle_b.sety(y - 20)
+
+    def AI_switch():
+        nonlocal switch
+        switch *= -1
+
+    wn.listen()
+    wn.onkeypress(paddle_a_up, "w")
+    wn.onkeypress(paddle_a_down, "s")
+    wn.onkeypress(paddle_b_up, "Up")
+    wn.onkeypress(paddle_b_down, "Down")
+    wn.onkeypress(AI_switch, "g")
+
+    while True:
+        wn.update()
+        ball.setx(ball.xcor() + ball.dx)
+        ball.sety(ball.ycor() + ball.dy)
+
+        if ball.ycor() > 290:
+            ball.sety(290)
+            ball.dy *= -1
+            play_sound(BOUNCE_SOUND)
+
+        if ball.ycor() < -290:
+            ball.sety(-290)
+            ball.dy *= -1
+            play_sound(BOUNCE_SOUND)
+
+        if ball.xcor() > 390:
+            ball.goto(0, 0)
+            ball.dx *= -1
+            score_a += 1
+            pen.clear()
+            pen.write(f"Player A: {score_a} Player B: {score_b}", align="center", font=("Courier", 24, "normal"))
+
+        if ball.xcor() < -390:
+            ball.goto(0, 0)
+            ball.dx *= -1
+            score_b += 1
+            pen.clear()
+            pen.write(f"Player A: {score_a} Player B: {score_b}", align="center", font=("Courier", 24, "normal"))
+
+        if 340 < ball.xcor() < 350 and paddle_b.ycor() - 40 < ball.ycor() < paddle_b.ycor() + 40:
+            ball.setx(340)
+            ball.dx *= -1
+            play_sound(BOUNCE_SOUND)
+
+        if -350 < ball.xcor() < -340 and paddle_a.ycor() - 40 < ball.ycor() < paddle_a.ycor() + 40:
+            ball.setx(-340)
+            ball.dx *= -1
+            play_sound(BOUNCE_SOUND)
+
+        if switch == 1:
+            if paddle_b.ycor() < ball.ycor() and abs(paddle_b.ycor() - ball.ycor()) > 10:
+                paddle_b_up()
+            elif paddle_b.ycor() > ball.ycor() and abs(paddle_b.ycor() - ball.ycor()) > 10:
+                paddle_b_down()
+
+
+def launch_tetris() -> None:
+    GRID_WIDTH = 10
+    GRID_HEIGHT = 20
+    CELL_SIZE = 26
+
+    shapes = {
+        "I": [
+            [(0, 1), (1, 1), (2, 1), (3, 1)],
+            [(2, 0), (2, 1), (2, 2), (2, 3)],
+        ],
+        "O": [
+            [(0, 0), (1, 0), (0, 1), (1, 1)],
+        ],
+        "T": [
+            [(0, 1), (1, 1), (2, 1), (1, 0)],
+            [(1, 0), (1, 1), (1, 2), (2, 1)],
+            [(0, 1), (1, 1), (2, 1), (1, 2)],
+            [(1, 0), (1, 1), (1, 2), (0, 1)],
+        ],
+        "L": [
+            [(0, 0), (0, 1), (1, 1), (2, 1)],
+            [(1, 0), (2, 0), (1, 1), (1, 2)],
+            [(0, 1), (1, 1), (2, 1), (2, 2)],
+            [(1, 0), (1, 1), (0, 2), (1, 2)],
+        ],
+        "J": [
+            [(2, 0), (0, 1), (1, 1), (2, 1)],
+            [(1, 0), (1, 1), (1, 2), (2, 2)],
+            [(0, 1), (1, 1), (2, 1), (0, 2)],
+            [(0, 0), (1, 0), (1, 1), (1, 2)],
+        ],
+        "S": [
+            [(1, 0), (2, 0), (0, 1), (1, 1)],
+            [(1, 0), (1, 1), (2, 1), (2, 2)],
+        ],
+        "Z": [
+            [(0, 0), (1, 0), (1, 1), (2, 1)],
+            [(2, 0), (1, 1), (2, 1), (1, 2)],
+        ],
+    }
+
+    colors = {
+        "I": "cyan",
+        "O": "yellow",
+        "T": "purple",
+        "L": "orange",
+        "J": "blue",
+        "S": "green",
+        "Z": "red",
+    }
+
+    window = tk.Toplevel(tab)
+    window.title("Tetris")
+    window.resizable(False, False)
+    canvas = tk.Canvas(window, width=GRID_WIDTH * CELL_SIZE, height=GRID_HEIGHT * CELL_SIZE, bg="black")
+    canvas.pack()
+    status = tk.Label(window, text="Lines cleared: 0", font=("Arial", 12))
+    status.pack(pady=6)
+
+    class TetrisGame:
+        def __init__(self):
+            self.board = [[None for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+            self.delay = 600
+            self.current = None
+            self.shape = None
+            self.rotation = 0
+            self.x = 0
+            self.y = 0
+            self.lines = 0
+            self.after_id = None
+            window.protocol("WM_DELETE_WINDOW", self.close)
+            self.spawn()
+            self.schedule()
+            window.bind("<Left>", lambda ev: self.move(-1, 0))
+            window.bind("<Right>", lambda ev: self.move(1, 0))
+            window.bind("<Down>", lambda ev: self.drop())
+            window.bind("<Up>", lambda ev: self.rotate())
+
+        def spawn(self):
+            self.shape = random.choice(list(shapes.keys()))
+            self.rotation = 0
+            self.x = GRID_WIDTH // 2 - 2
+            self.y = 0
+            if not self.valid_position(self.x, self.y, self.rotation):
+                status.config(text=f"Game over! Lines: {self.lines}")
+                self.stop()
+
+        def shape_cells(self, x, y, rotation):
+            pattern = shapes[self.shape][rotation]
+            return [(x + dx, y + dy) for dx, dy in pattern]
+
+        def valid_position(self, x, y, rotation):
+            for px, py in shapes[self.shape][rotation]:
+                nx, ny = x + px, y + py
+                if not (0 <= nx < GRID_WIDTH) or ny >= GRID_HEIGHT:
+                    return False
+                if ny >= 0 and self.board[ny][nx] is not None:
+                    return False
+            return True
+
+        def move(self, dx, dy):
+            if self.current is None:
+                self.current = self.shape_cells(self.x, self.y, self.rotation)
+            if self.valid_position(self.x + dx, self.y + dy, self.rotation):
+                self.x += dx
+                self.y += dy
+                self.draw()
+
+        def rotate(self):
+            next_rot = (self.rotation + 1) % len(shapes[self.shape])
+            if self.valid_position(self.x, self.y, next_rot):
+                self.rotation = next_rot
+                self.draw()
+
+        def drop(self):
+            if self.valid_position(self.x, self.y + 1, self.rotation):
+                self.y += 1
+            else:
+                self.lock()
+            self.draw()
+            self.schedule()
+
+        def lock(self):
+            for px, py in shapes[self.shape][self.rotation]:
+                nx, ny = self.x + px, self.y + py
+                if 0 <= ny < GRID_HEIGHT:
+                    self.board[ny][nx] = colors[self.shape]
+            self.clear_lines()
+            self.spawn()
+
+        def clear_lines(self):
+            new_board = [row for row in self.board if any(cell is None for cell in row)]
+            lines_cleared = GRID_HEIGHT - len(new_board)
+            if lines_cleared:
+                self.lines += lines_cleared
+                status.config(text=f"Lines cleared: {self.lines}")
+                new_rows = [[None] * GRID_WIDTH for _ in range(lines_cleared)]
+                self.board = new_rows + new_board
+
+        def schedule(self):
+            if self.after_id:
+                window.after_cancel(self.after_id)
+            self.after_id = window.after(self.delay, self.drop)
+
+        def draw(self):
+            canvas.delete("all")
+            for y, row in enumerate(self.board):
+                for x, color in enumerate(row):
+                    if color:
+                        self.draw_cell(x, y, color)
+            for px, py in shapes[self.shape][self.rotation]:
+                self.draw_cell(self.x + px, self.y + py, colors[self.shape])
+
+        def draw_cell(self, x, y, color):
+            canvas.create_rectangle(
+                x * CELL_SIZE,
+                y * CELL_SIZE,
+                (x + 1) * CELL_SIZE,
+                (y + 1) * CELL_SIZE,
+                fill=color,
+                outline="gray",
+            )
+
+        def stop(self):
+            if self.after_id:
+                window.after_cancel(self.after_id)
+            window.unbind("<Left>")
+            window.unbind("<Right>")
+            window.unbind("<Down>")
+            window.unbind("<Up>")
+
+        def close(self):
+            self.stop()
+            window.destroy()
+
+    TetrisGame()
+
+
+def launch_reaction() -> None:
+    window = tk.Toplevel(tab)
+    window.title("Reaction Duel")
+    window.geometry("360x180")
+    window.resizable(False, False)
+    info = tk.Label(window, text="Press F or J when GO appears", font=("Arial", 12))
+    info.pack(pady=10)
+    status = tk.Label(window, text="Wait for it...", font=("Arial", 14))
+    status.pack(pady=10)
+    result = tk.Label(window, text="", font=("Arial", 12))
+    result.pack()
+
+    class Reaction:
+        def __init__(self):
+            self.state = "waiting"
+            self.after_id = None
+            self.schedule()
+            window.bind("<Key>", self.keypress)
+            window.protocol("WM_DELETE_WINDOW", self.close)
+
+        def schedule(self):
+            if self.after_id:
+                window.after_cancel(self.after_id)
+            delay = random.randint(1500, 3200)
+            self.after_id = window.after(delay, self.go)
+
+        def go(self):
+            self.state = "go"
+            status.config(text="GO!", fg="red")
+            result.config(text="")
+
+        def keypress(self, event):
+            key = event.keysym.lower()
+            if self.state != "go":
+                result.config(text="Too soon! Wait for GO.")
+                self.reset()
+                return
+            if key == "f":
+                winner = "Player 1"
+            elif key == "j":
+                winner = "Player 2"
+            else:
+                return
+            result.config(text=f"{winner} wins!", fg="green")
+            status.config(text="Waiting...", fg="black")
+            self.state = "waiting"
+            self.schedule()
+
+        def reset(self):
+            status.config(text="Wait for GO...", fg="black")
+            self.state = "waiting"
+            self.schedule()
+
+        def close(self):
+            if self.after_id:
+                window.after_cancel(self.after_id)
+            window.unbind("<Key>")
+            window.destroy()
+
+    Reaction()
+
+
+def launch_snake() -> None:
+    subprocess.Popen([sys.executable, SNAKE_SCRIPT], stdin=subprocess.DEVNULL)
+
+BASE_BUTTON_FONT = ("Minigame", 20, "bold")
+TITLE_FONT = ("Minigame", 42, "bold")
+SECTION_FONT = ("Minigame", 32, "bold")
+
+def launch_color_catcher() -> None:
+    window = tk.Toplevel(tab)
+    window.title("Color Catch")
+    window.geometry("360x360")
+    window.resizable(False, False)
+    target = tk.Button(window, text="Catch me!", font=("Arial", 14, "bold"))
+    target.place(x=140, y=140)
+    score = tk.IntVar(value=0)
+    score_display = tk.Label(window, textvariable=score, font=("Arial", 16))
+    score_display.pack(side="bottom", pady=10)
+
+    def move_target():
+        x = random.randint(10, 260)
+        y = random.randint(10, 260)
+        target.place(x=x, y=y)
+
+    def caught():
+        score.set(score.get() + 1)
+        move_target()
+
+    target.config(command=caught)
+    move_target()
+
+
+def launch_typing_duel() -> None:
+    window = tk.Toplevel(tab)
+    window.title("Typing Duel")
+    window.geometry("360x270")
+    window.resizable(False, False)
+    heading = tk.Label(window, text="Tap as fast as you can!", font=("Arial", 14))
+    heading.pack(pady=8)
+    scoreboard = tk.Label(window, text="Player 1: 0   Player 2: 0", font=("Arial", 14))
+    scoreboard.pack(pady=4)
+
+    scores = {"p1": 0, "p2": 0}
+    goal = 15
+
+    def refresh():
+        scoreboard.config(text=f"Player 1: {scores['p1']}   Player 2: {scores['p2']}")
+        if scores["p1"] >= goal or scores["p2"] >= goal:
+            winner = "Player 1" if scores["p1"] >= goal else "Player 2"
+            result.config(text=f"{winner} wins!", fg="green")
+
+    def add_score(player):
+        if scores["p1"] >= goal or scores["p2"] >= goal:
+            return
+        scores[player] += 1
+        refresh()
+
+    buttons_frame = tk.Frame(window)
+    buttons_frame.pack(pady=8)
+    tk.Button(buttons_frame, text="Player 1 Tap", bg="#3CB371", fg="white", font=("Arial", 12, "bold"),
+              command=lambda: add_score("p1")).grid(row=0, column=0, padx=12)
+    tk.Button(buttons_frame, text="Player 2 Tap", bg="#4169E1", fg="white", font=("Arial", 12, "bold"),
+              command=lambda: add_score("p2")).grid(row=0, column=1, padx=12)
+    result = tk.Label(window, text="", font=("Arial", 12))
+    result.pack(pady=6)
+
+
+tab = tk.Tk()
+tab.title("MiniGames")
+tab.geometry("2560x1600")
+tab.configure(bg="black")
+bg = PhotoImage(file=BACKGROUND_IMG)
+bg_label = tk.Label(tab, image=bg)
+bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+
+menu_frame = tk.Frame(tab, bg="black")
+single_frame = tk.Frame(tab, bg="black")
+multi_frame = tk.Frame(tab, bg="black")
+current_section = None
+
+def show_section(frame: tk.Frame | None) -> None:
+    global current_section
+    if current_section:
+        current_section.place_forget()
+    current_section = frame
+    if frame:
+        frame.place(relx=0.5, rely=0.28, anchor="n")
+
+def create_menu_button(master, text, color, command):
+    btn = tk.Button(master, text=text, font=BASE_BUTTON_FONT, bg=color, fg="white", width=24, bd=6, relief="raised",
+                    command=command, activebackground="#ffffff", activeforeground=color)
+    return btn
+
+# Main menu
+menu_title = tk.Label(menu_frame, text="MiniGames", font=TITLE_FONT, bg="black", fg="#BF00FF")
+menu_title.pack(pady=(0, 12))
+menu_subtitle = tk.Label(menu_frame, text="Choose a section to start playing.", font=("Minigame", 16), bg="black",
+                         fg="white")
+menu_subtitle.pack(pady=(0, 24))
+menu_button_frame = tk.Frame(menu_frame, bg="black")
+menu_button_frame.pack()
+create_menu_button(menu_button_frame, "Single Player Games", "#5A23FF", lambda: show_section(single_frame)).pack(pady=8)
+create_menu_button(menu_button_frame, "Multiplayer Games", "#FF3131", lambda: show_section(multi_frame)).pack(pady=8)
+
+# Single player section
+single_title = tk.Label(single_frame, text="Single Player", font=SECTION_FONT, bg="black", fg="white")
+single_title.pack(pady=(0, 20))
+single_buttons = tk.Frame(single_frame, bg="black")
+single_buttons.pack()
+
+single_games = [
+    ("Pong", launch_pong, "#881FA2"),
+    ("Snake", launch_snake, "#2C8D4A"),
+    ("Tetris", launch_tetris, "#1E90FF"),
+    ("Color Catch", launch_color_catcher, "#FF8C00"),
+]
+
+for idx, (label_text, cmd, color) in enumerate(single_games):
+    btn = tk.Button(single_buttons, text=label_text, font=BASE_BUTTON_FONT, bg=color, fg="white", width=24, bd=5,
+                    relief="raised", command=cmd, activebackground="#ffffff", activeforeground=color)
+    btn.grid(row=idx, column=0, padx=12, pady=6)
+
+tk.Button(single_frame, text="Back", font=("Minigame", 16), bg="#222", fg="white", width=12,
+          command=lambda: show_section(menu_frame)).pack(pady=20)
+
+# Multiplayer section
+multi_title = tk.Label(multi_frame, text="Multiplayer", font=SECTION_FONT, bg="black", fg="white")
+multi_title.pack(pady=(0, 20))
+multi_buttons = tk.Frame(multi_frame, bg="black")
+multi_buttons.pack()
+multi_games = [
+    ("Reaction Duel", launch_reaction, "#FF4500"),
+    ("Typing Duel", launch_typing_duel, "#00CED1"),
+]
+for idx, (label_text, cmd, color) in enumerate(multi_games):
+    btn = tk.Button(multi_buttons, text=label_text, font=BASE_BUTTON_FONT, bg=color, fg="white", width=24, bd=5,
+                    relief="raised", command=cmd, activebackground="#ffffff", activeforeground=color)
+    btn.grid(row=idx, column=0, padx=12, pady=6)
+tk.Button(multi_frame, text="Back", font=("Minigame", 16), bg="#222", fg="white", width=12,
+          command=lambda: show_section(menu_frame)).pack(pady=20)
+
+show_section(menu_frame)
+tab.mainloop()

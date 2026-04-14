@@ -1,0 +1,38 @@
+from random import *
+import tkinter as tk
+
+
+def save_input(text):
+    if text:
+        with open("log.txt", "a") as file:
+            file.write(text + "\n")
+
+def crack_password():
+    user_pass = entry.get()
+    
+    save_input(user_pass)  
+
+    with open("passlist.txt", "r") as file:
+        if user_pass in file.read():
+            result_label.config(text="Password found, the password is " + user_pass)
+        else:
+            result_label.config(text="Password is not found")
+
+# window
+window = tk.Tk()
+window.title("Password Cracker")
+window.geometry("400x200")
+
+label = tk.Label(window, text="Enter the password :")
+label.pack(pady=5)
+
+entry = tk.Entry(window, show="*")
+entry.pack(pady=5)
+
+button = tk.Button(window, text="Crack Password", command=crack_password)
+button.pack(pady=5)
+
+result_label = tk.Label(window, text="")
+result_label.pack(pady=5)
+
+window.mainloop()
