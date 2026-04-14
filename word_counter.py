@@ -1,0 +1,7 @@
+line = input("Please enter the first line of a song:")
+length = len(line.replace(" ", ""))
+print ("this is the length of the line",length)
+beggining = int(input("Please state the starting number: "))
+end = int(input("Please state the finishing number: "))
+part = (line[beggining:end])
+print("this is the part of the line", part)
