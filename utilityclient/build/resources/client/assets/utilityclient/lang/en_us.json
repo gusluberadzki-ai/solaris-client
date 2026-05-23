@@ -1,0 +1,30 @@
+{
+  "modmenu.nameTranslation.utilityclient": "Utility Client",
+
+  "key.categories.utilityclient": "Utility Client",
+
+  "key.utilityclient.click_gui":   "Open Click GUI",
+  "key.utilityclient.hud_editor":  "Open HUD Editor",
+  "key.utilityclient.world_map":   "Open World Map",
+  "key.utilityclient.zoom":        "Zoom",
+
+  "key.utilityclient.autoclicker":          "Toggle AutoClicker",
+  "key.utilityclient.hunger_saturation_hud":"Toggle Hunger & Saturation HUD",
+  "key.utilityclient.minimap":              "Toggle Minimap",
+  "key.utilityclient.world_map_module":     "Toggle World Map Module",
+  "key.utilityclient.waypoints":            "Toggle Waypoints",
+  "key.utilityclient.armor_durability_hud": "Toggle Armor Durability HUD",
+  "key.utilityclient.effect_timers_hud":    "Toggle Effect Timers HUD",
+  "key.utilityclient.position_indicator_hud":"Toggle Position Indicator HUD",
+  "key.utilityclient.speed_indicator_hud":  "Toggle Speed Indicator HUD",
+  "key.utilityclient.fps_performance_hud":  "Toggle FPS & Performance HUD",
+  "key.utilityclient.crosshair_customizer": "Toggle Crosshair Customizer",
+  "key.utilityclient.keystrokes_hud":       "Toggle Keystrokes HUD",
+  "key.utilityclient.toggle_sprint_sneak":  "Toggle Sprint/Sneak",
+  "key.utilityclient.zoom_module":          "Toggle Zoom Module",
+  "key.utilityclient.scoreboard_tweaks":    "Toggle Scoreboard Tweaks",
+  "key.utilityclient.mount_hud":            "Toggle Mount HUD",
+
+  "screen.utilityclient.modules":  "Modules",
+  "screen.utilityclient.settings": "Settings"
+}

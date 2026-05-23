@@ -1,0 +1,4 @@
+starter.cpp:6:10: fatal error: 'glad/glad.h' file not found
+    6 | #include <glad/glad.h>
+      |          ^~~~~~~~~~~~~
+1 error generated.

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "utilityclient",
+  "version": "0.2.0",
+  "name": "Solaris Client",
+  "description": "Solaris — a performance-focused Minecraft 1.21.11 client with 16 HUD modules, waypoints, zoom, and a custom interface.",
+  "authors": [
+    "ECHOplazy"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "com.utilityclient.UtilityClient"
+    ],
+    "client": [
+      "com.utilityclient.client.UtilityClientClient"
+    ]
+  },
+  "mixins": [
+    "utilityclient.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

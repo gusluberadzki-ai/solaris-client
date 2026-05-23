@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.utilityclient.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "FoodDataAccessor",
+    "GameRendererMixin",
+    "GuiMixin",
+    "MinecraftMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

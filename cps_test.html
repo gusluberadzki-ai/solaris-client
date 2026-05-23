@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPS Test Arena</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --panel-soft: #182230;
+      --border: rgba(148, 163, 184, 0.16);
+      --text: #e5eefb;
+      --muted: #8aa0bd;
+      --emerald: #10b981;
+      --blue: #3b82f6;
+      --danger: #ef4444;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.18), transparent 24%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app-shell {
+      width: min(1100px, 100%);
+      display: grid;
+      gap: 24px;
+      align-content: start;
+    }
+
+    .hero {
+      text-align: center;
+      padding-top: 8px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(31, 41, 55, 0.8);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.92rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--emerald), #34d399);
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.8);
+    }
+
+    h1 {
+      margin: 18px 0 8px;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin: 0 auto;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .mode-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      padding: 18px;
+      background: rgba(31, 41, 55, 0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .mode-btn {
+      border: 1px solid transparent;
+      background: rgba(17, 24, 39, 0.95);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .mode-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(59, 130, 246, 0.35);
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(135deg, var(--blue), var(--emerald));
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.28);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .stat-card {
+      background: linear-gradient(180deg, rgba(31, 41, 55, 0.96), rgba(24, 34, 48, 0.98));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      min-height: 140px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.82rem;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: clamp(2.1rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .timer-value {
+      color: #93c5fd;
+    }
+
+    .click-value {
+      color: #f8fafc;
+    }
+
+    .cps-value {
+      color: #6ee7b7;
+    }
+
+    .pad-card {
+      position: relative;
+      min-height: 360px;
+      border-radius: 32px;
+      border: 1px solid rgba(59, 130, 246, 0.18);
+      background:
+        linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.12)),
+        rgba(31, 41, 55, 0.98);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .pad-card::before,
+    .pad-card::after {
+      content: "";
+      position: absolute;
+      inset: auto;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .pad-card::before {
+      width: 320px;
+      height: 320px;
+      top: -120px;
+      right: -80px;
+      background: rgba(59, 130, 246, 0.14);
+      filter: blur(10px);
+    }
+
+    .pad-card::after {
+      width: 260px;
+      height: 260px;
+      bottom: -120px;
+      left: -40px;
+      background: rgba(16, 185, 129, 0.12);
+      filter: blur(8px);
+    }
+
+    .click-pad {
+      position: relative;
+      z-index: 1;
+      min-height: 360px;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 36px;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .click-pad:disabled {
+      cursor: not-allowed;
+      opacity: 0.92;
+    }
+
+    .pad-copy {
+      max-width: 720px;
+    }
+
+    .pad-heading {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .pad-text {
+      margin: 0;
+      font-size: clamp(1rem, 2.1vw, 1.22rem);
+      color: #c6d4ea;
+      line-height: 1.6;
+    }
+
+    .helper-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.75);
+      border: 1px solid var(--border);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.72);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 20;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(540px, 100%);
+      background: linear-gradient(180deg, rgba(31, 41, 55, 1), rgba(20, 27, 39, 1));
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 28px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+      padding: 28px;
+      text-align: center;
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+    }
+
+    .modal p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .rank-badge {
+      margin: 18px auto 22px;
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid var(--border);
+      font-size: 1.12rem;
+      font-weight: 700;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 24px;
+    }
+
+    .result-card {
+      border-radius: 18px;
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid var(--border);
+      padding: 16px 12px;
+    }
+
+    .result-card strong {
+      display: block;
+      font-size: 1.5rem;
+      margin-top: 8px;
+      color: white;
+    }
+
+    .result-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .try-again {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 22px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(135deg, var(--emerald), var(--blue));
+      cursor: pointer;
+      box-shadow: 0 18px 36px rgba(16, 185, 129, 0.28);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .try-again:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 20px 40px rgba(59, 130, 246, 0.28);
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 16px;
+      }
+
+      .stats-grid,
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-card {
+        min-height: 118px;
+      }
+
+      .pad-card,
+      .click-pad {
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero">
+      <div class="eyebrow">CPS test inspired by competitive click trainers</div>
+      <h1>Clicks Per Second Test</h1>
+      <p class="subtitle">Choose a time mode, hammer the pad with zero-delay input handling, and see whether you land as a Sloth, Human, Cheetah, or full-on Pro.</p>
+    </section>
+
+    <nav class="mode-bar" aria-label="Time modes" id="modeBar"></nav>
+
+    <section class="stats-grid" aria-label="Live stats">
+      <article class="stat-card">
+        <div class="stat-label">Timer</div>
+        <div class="stat-value timer-value" id="timerValue">5.0s</div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-label">Clicks</div>
+        <div class="stat-value click-value" id="clickValue">0</div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-label">CPS</div>
+        <div class="stat-value cps-value" id="cpsValue">0.00</div>
+      </article>
+    </section>
+
+    <section class="pad-card">
+      <button class="click-pad" id="clickPad" type="button" aria-label="Click here to start the game">
+        <div class="pad-copy">
+          <div class="pad-heading" id="padHeading">Click here to start the game</div>
+          <p class="pad-text" id="padText">Your timer begins on the first press. Mouse down or tap aggressively and chase the highest CPS you can hold.</p>
+          <div class="helper-row">
+            <span class="pill" id="modeSummary">Current mode: 5 Seconds</span>
+            <span class="pill">Low-latency input: `mousedown` + `pointerdown`</span>
+          </div>
+        </div>
+      </button>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="resultsModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h2 id="modalTitle">Round Complete</h2>
+      <p>Your clicking run is locked in. Here is the final score.</p>
+      <div class="rank-badge" id="rankBadge">Human 👤</div>
+      <div class="result-grid">
+        <div class="result-card">
+          <span class="result-label">Total Clicks</span>
+          <strong id="resultClicks">0</strong>
+        </div>
+        <div class="result-card">
+          <span class="result-label">Time Elapsed</span>
+          <strong id="resultTime">5.0s</strong>
+        </div>
+        <div class="result-card">
+          <span class="result-label">Final CPS</span>
+          <strong id="resultCps">0.00</strong>
+        </div>
+      </div>
+      <button class="try-again" id="tryAgainBtn" type="button">Try Again</button>
+    </div>
+  </div>
+
+  <script>
+    const timeModes = [1, 5, 10, 15, 30, 60, 100];
+    const headingMessages = [
+      "Click here to start the game",
+      "Nice start. Keep the rhythm going.",
+      "You are warming up. Push faster.",
+      "Strong pace. Stay locked in.",
+      "Competitive speed. Do not drop it now.",
+      "You are flying. Chase that record.",
+      "Elite streak. Empty the tank."
+    ];
+
+    const modeBar = document.getElementById("modeBar");
+    const timerValue = document.getElementById("timerValue");
+    const clickValue = document.getElementById("clickValue");
+    const cpsValue = document.getElementById("cpsValue");
+    const padHeading = document.getElementById("padHeading");
+    const padText = document.getElementById("padText");
+    const clickPad = document.getElementById("clickPad");
+    const modeSummary = document.getElementById("modeSummary");
+    const resultsModal = document.getElementById("resultsModal");
+    const tryAgainBtn = document.getElementById("tryAgainBtn");
+    const rankBadge = document.getElementById("rankBadge");
+    const resultClicks = document.getElementById("resultClicks");
+    const resultTime = document.getElementById("resultTime");
+    const resultCps = document.getElementById("resultCps");
+
+    let selectedDuration = 5;
+    let clicks = 0;
+    let isRunning = false;
+    let isFinished = false;
+    let startTime = 0;
+    let rafId = null;
+    function buildModeButtons() {
+      modeBar.innerHTML = "";
+
+      timeModes.forEach((seconds) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "mode-btn";
+        button.textContent = `${seconds} Second${seconds === 1 ? "" : "s"}`;
+        button.dataset.time = String(seconds);
+
+        if (seconds === selectedDuration) {
+          button.classList.add("active");
+        }
+
+        button.addEventListener("click", () => {
+          if (selectedDuration !== seconds) {
+            selectedDuration = seconds;
+            resetGame();
+            syncModeButtons();
+          }
+        });
+
+        modeBar.appendChild(button);
+      });
+    }
+
+    function syncModeButtons() {
+      document.querySelectorAll(".mode-btn").forEach((button) => {
+        button.classList.toggle("active", Number(button.dataset.time) === selectedDuration);
+      });
+      modeSummary.textContent = `Current mode: ${selectedDuration} Second${selectedDuration === 1 ? "" : "s"}`;
+    }
+
+    function formatSeconds(value) {
+      return `${Math.max(0, value).toFixed(1)}s`;
+    }
+
+    function currentElapsed() {
+      if (!isRunning) {
+        return 0;
+      }
+      return Math.min((performance.now() - startTime) / 1000, selectedDuration);
+    }
+
+    function currentCps() {
+      const elapsed = currentElapsed();
+      return elapsed > 0 ? clicks / elapsed : 0;
+    }
+
+    function chooseHeading() {
+      if (!clicks) {
+        return headingMessages[0];
+      }
+
+      const progress = Math.min(clicks / Math.max(selectedDuration * 4, 1), 1);
+      const index = Math.min(
+        headingMessages.length - 1,
+        Math.max(1, Math.floor(progress * (headingMessages.length - 1)) + 1)
+      );
+      return headingMessages[index];
+    }
+
+    function updateLiveStats() {
+      const elapsed = currentElapsed();
+      const remaining = isRunning ? selectedDuration - elapsed : selectedDuration;
+      timerValue.textContent = formatSeconds(remaining);
+      clickValue.textContent = String(clicks);
+      cpsValue.textContent = currentCps().toFixed(2);
+      padHeading.textContent = chooseHeading();
+    }
+
+    function loop() {
+      updateLiveStats();
+      if (!isRunning) {
+        return;
+      }
+
+      const elapsed = currentElapsed();
+      if (elapsed >= selectedDuration) {
+        finishGame();
+        return;
+      }
+
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function startGame() {
+      isRunning = true;
+      startTime = performance.now();
+      padText.textContent = "Every press counts instantly. Keep tapping hard until the timer hits zero.";
+      clickPad.focus({ preventScroll: true });
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function getRank(finalCps) {
+      if (finalCps < 5) {
+        return "Sloth 🦥 (Slow, casual clicking)";
+      }
+      if (finalCps < 8) {
+        return "Human 👤 (Average, normal clicking)";
+      }
+      if (finalCps < 10) {
+        return "Cheetah 🐆 (Good, competitive clicking)";
+      }
+      return "Hacker / Pro ⚡ (Elite, jitter/butterfly clicking)";
+    }
+
+    function finishGame() {
+      isRunning = false;
+      isFinished = true;
+      clickPad.disabled = true;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      timerValue.textContent = "0.0s";
+
+      const finalCps = selectedDuration > 0 ? clicks / selectedDuration : 0;
+      cpsValue.textContent = finalCps.toFixed(2);
+      padHeading.textContent = "Time is up.";
+      padText.textContent = "Your score is locked. Check the results and jump back in for another run.";
+
+      resultClicks.textContent = String(clicks);
+      resultTime.textContent = `${selectedDuration.toFixed(1)}s`;
+      resultCps.textContent = finalCps.toFixed(2);
+      rankBadge.textContent = getRank(finalCps);
+      resultsModal.classList.add("show");
+    }
+
+    function resetGame() {
+      isRunning = false;
+      isFinished = false;
+      clicks = 0;
+      startTime = 0;
+      clickPad.disabled = false;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      resultsModal.classList.remove("show");
+      padHeading.textContent = headingMessages[0];
+      padText.textContent = "Your timer begins on the first press. Mouse down or tap aggressively and chase the highest CPS you can hold.";
+      timerValue.textContent = formatSeconds(selectedDuration);
+      clickValue.textContent = "0";
+      cpsValue.textContent = "0.00";
+      syncModeButtons();
+    }
+
+    function registerPress(event) {
+      if (isFinished) {
+        return;
+      }
+
+      if (event.type === "mousedown" && window.PointerEvent) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (!isRunning) {
+        startGame();
+      }
+
+      clicks += 1;
+      updateLiveStats();
+    }
+
+    clickPad.addEventListener("pointerdown", registerPress);
+    clickPad.addEventListener("mousedown", registerPress);
+
+    tryAgainBtn.addEventListener("click", resetGame);
+    resultsModal.addEventListener("pointerdown", (event) => {
+      if (event.target === resultsModal) {
+        resetGame();
+      }
+    });
+
+    buildModeButtons();
+    resetGame();
+  </script>
+</body>
+</html>
