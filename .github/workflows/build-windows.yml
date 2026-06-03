@@ -10,6 +10,9 @@ on:
         required: true
         default: 'v1.0.0'
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -27,9 +30,7 @@ jobs:
         run: pip install pyinstaller
 
       - name: Build EXE
-        run: |
-          dir
-          python -m PyInstaller --windowed --onefile --name "AverageGradeCalculator" averageGradeCal.py
+        run: python -m PyInstaller --windowed --onefile --name "AverageGradeCalculator" averageGradeCal.py
 
       - name: Upload EXE to release
         uses: softprops/action-gh-release@v2
